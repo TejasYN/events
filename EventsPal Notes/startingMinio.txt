@@ -1,0 +1,5 @@
+C:\MinIO>set MINIO_ROOT_USER=admin
+
+C:\MinIO>set MINIO_ROOT_PASSWORD=admin123
+
+C:\MinIO>minio.exe server C:\MinIO\data --console-address ":9090"

@@ -1,0 +1,135 @@
+Perfect 👌 MinIO is a great choice for open source + S3 compatibility. Since you already have a Node.js + Flutter setup, here’s how we’ll do it step by step:
+
+🪜 Step 1: Install & Run MinIO
+
+You can run MinIO locally (for dev) or on a VPS (for production).
+
+Option 1: Docker (easiest)
+docker run -p 9000:9000 -p 9090:9090 \
+  -e "MINIO_ROOT_USER=admin" \
+  -e "MINIO_ROOT_PASSWORD=admin123" \
+  quay.io/minio/minio server /data --console-address ":9090"
+
+
+MinIO API → http://localhost:9000
+
+MinIO Console (UI) → http://localhost:9090
+
+Login with admin / admin123
+
+🪜 Step 2: Create a Bucket
+
+Open http://localhost:9090
+
+Login → Create a bucket (e.g. eventspal-images)
+
+Set bucket policy to public read if you want direct image links to work.
+
+🪜 Step 3: Setup Node.js Backend
+
+We’ll use minio npm package.
+
+npm install minio multer
+
+minioClient.js
+import Minio from "minio";
+
+export const minioClient = new Minio.Client({
+  endPoint: "127.0.0.1",
+  port: 9000,
+  useSSL: false,
+  accessKey: "admin",
+  secretKey: "admin123",
+});
+
+uploadRoute.js
+import express from "express";
+import multer from "multer";
+import { minioClient } from "./minioClient.js";
+import { v4 as uuidv4 } from "uuid";
+
+const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post("/upload", upload.single("image"), async (req, res) => {
+  try {
+    const bucketName = "eventspal-images";
+    const fileName = `${uuidv4()}-${req.file.originalname}`;
+
+    await minioClient.putObject(bucketName, fileName, req.file.buffer, {
+      "Content-Type": req.file.mimetype,
+    });
+
+    // URL (if bucket is public)
+    const url = `http://127.0.0.1:9000/${bucketName}/${fileName}`;
+
+    res.json({ url, fileName });
+  } catch (err) {
+    res.status(500).json({ message: "Upload failed", error: err.message });
+  }
+});
+
+export default router;
+
+🪜 Step 4: Use in Flutter
+Upload Image
+
+Use image_picker + http.
+
+Future<void> uploadImage(File imageFile) async {
+  var request = http.MultipartRequest(
+    "POST",
+    Uri.parse("http://10.0.2.2:5000/api/upload"), // Node backend
+  );
+
+  request.files.add(await http.MultipartFile.fromPath("image", imageFile.path));
+
+  var response = await request.send();
+  var responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode == 200) {
+    final data = json.decode(responseBody);
+    print("✅ Uploaded: ${data['url']}");
+    // save data['url'] into venue details in MongoDB
+  } else {
+    print("❌ Upload failed");
+  }
+}
+
+🪜 Step 5: Store in MongoDB
+
+After uploading, you get a url from MinIO.
+
+Save this url inside your Venue document (in images array).
+
+When user opens the venue → just show Image.network(url) in Flutter.
+
+VendorPrefs can also store this list of URLs locally.
+
+🪜 Step 6: Display Images in Flutter
+List<String> imageUrls = vendor["images"] ?? [];
+
+ListView.builder(
+  scrollDirection: Axis.horizontal,
+  itemCount: imageUrls.length,
+  itemBuilder: (context, index) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Image.network(imageUrls[index]),
+    );
+  },
+);
+
+⚖️ Summary Flow
+
+Vendor picks image → Flutter uploads to backend.
+
+Backend saves to MinIO → returns public URL.
+
+Backend also stores URL in MongoDB venue doc.
+
+User & vendor apps fetch venue → get URLs → display with Image.network.
+
+VendorPrefs can cache them so reopening the app still shows images.
+
+👉 Do you want me to also show you how to update VendorPrefs to handle storing & retrieving the images array (just like we did for available/unavailable dates)?

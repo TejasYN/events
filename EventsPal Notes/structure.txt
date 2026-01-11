@@ -1,0 +1,44 @@
+Eventspal/backend/
+|--node_modules
+|--Server.js
+|--package-lock.json
+|--package.json
+|--.env
+|--config
+|     |--db.js
+|     |--nidemailer.js
+|     |--minioclient.js
+|--models
+|     |--User.js
+|     |--Vendor.js
+|     |--Venues.js
+|     |--Photography.js
+|     |--Makeup.js
+|     |--Music.js
+|     |--Decoration.js
+|     |--Catering.js
+|--routes
+|     |--userRoutes.js
+|     |--vendorRoutes.js
+|     |--venueRoutes.js
+|     |--venueuploadRoutes.js
+|     |--cateringRoutes.js
+|     |--cateringuploadRoutes.js
+|     |--makeupRoutes.js
+|     |--makeupuploadRoutes.js
+|     |--musicRoutes.js
+|     |--musicuploadRoutes.js
+|     |--decorationRoutes.js
+|     |--decorationuploadRoutes.js
+|     |--photographyRoutes.js
+|     |--photographyuploadRoutes.js
+|--controllers
+|     |--userController.js
+|     |--vendorCintroller.js
+|     |--venueController.js
+|     |--cateringController.js
+|     |--photographyController.js
+|     |--makeupController.js
+|     |--musicController.js
+|     |--decorationController.js
+|     |--uploadController.js

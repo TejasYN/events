@@ -1,0 +1,16 @@
+✅ How to Use in Your Vendor Signup Page
+
+Instead of writing multiple prefs.setString, just do:
+
+await VendorPrefs.saveVendorData(vendorData);
+
+
+And later, when you need to fetch vendor details:
+
+Map<String, String?> vendor = await VendorPrefs.getVendorData();
+print(vendor["name"]); // Example usage
+
+
+And when vendor logs out:
+
+await VendorPrefs.clearVendorData();
